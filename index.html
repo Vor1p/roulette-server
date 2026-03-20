@@ -149,18 +149,36 @@
     const tg = window.Telegram.WebApp;
 const SERVER_URL = 'https://itchy-loops-crash.loca.lt'; // Ссылка от Render
 
-async function shoot(target) {
-    const userId = tg.initDataUnsafe?.user?.id || "test_123";
-
-    // 1. Визуальный эффект выстрела (анимация)
-    document.getElementById('main-gun').classList.add('recoil');
-
+    async function shoot(target) {
+    // 1. Убедись, что SERVER_URL без слэша в конце!
+    // Пример: const SERVER_URL = 'https://your-link.loca.lt';
+    
     try {
+        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "12345";
+        
         const response = await fetch(`${SERVER_URL}/api/move`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId, action: target })
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                action: target
+            })
         });
+
+        if (!response.ok) {
+            throw new Error(`Код ошибки сервера: ${response.status}`);
+        }
+
+        const data = await response.json();
+        alert("Результат: " + data.result); // Если это сработает — мы победили!
+
+    } catch (e) {
+        // Если здесь напишет "Failed to fetch" — Telegram блокирует туннель
+        alert("ОШИБКА: " + e.message);
+    }
+}
 
         const data = await response.json();
 
