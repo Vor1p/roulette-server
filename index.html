@@ -147,26 +147,39 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
+const SERVER_URL = 'https://твой-проект.onrender.com'; // Ссылка от Render
 
-    function shoot(target) {
-        // Эффект отдачи
-        const gun = document.getElementById('main-gun');
-        gun.classList.add('recoil');
-        
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+async function shoot(target) {
+    const userId = tg.initDataUnsafe?.user?.id || "test_123";
 
-        // Ждем немного и отправляем данные боту
+    // 1. Визуальный эффект выстрела (анимация)
+    document.getElementById('main-gun').classList.add('recoil');
+
+    try {
+        const response = await fetch(`${SERVER_URL}/api/move`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, action: target })
+        });
+
+        const data = await response.json();
+
+        // 2. Обновляем интерфейс БЕЗ перезагрузки
         setTimeout(() => {
-            gun.classList.remove('recoil');
-            tg.sendData(target); // Шлет "self" или "enemy"
+            document.getElementById('main-gun').classList.remove('recoil');
+            
+            if (data.result === 'hit') {
+                showBloodEffect(); // Твоя будущая функция вспышки
+            }
+            
+            // Обновляем полоски HP
+            updateUI(data.player_hp, data.enemy_hp);
         }, 300);
-    }
 
-    function use(item) {
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        tg.sendData("use_" + item);
+    } catch (e) {
+        alert("Ошибка связи: " + e.message);
     }
+}
 </script>
 
 </body>
